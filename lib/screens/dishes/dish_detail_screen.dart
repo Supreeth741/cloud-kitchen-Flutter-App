@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../models/dish.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DishDetailScreen extends StatefulWidget {
   @override
@@ -14,6 +16,41 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
 
   PageController _pageController = PageController();
   int _currentPage = 0;
+  Future<void>? launched;
+
+  Future<void> requestPhonePermission() async {
+    // Check current permission status
+    final status = await Permission.phone.status;
+
+    if (status.isDenied) {
+      // Request permission
+      if (await Permission.phone.request().isGranted) {
+        // ignore: avoid_print
+        print('Phone permission granted.');
+      } else {
+        // ignore: avoid_print
+        print('Phone permission denied.');
+      }
+    } else if (status.isGranted) {
+      // ignore: avoid_print
+      print('Phone permission already granted.');
+    } else if (status.isPermanentlyDenied) {
+      // Handle permanently denied permissions
+      // ignore: avoid_print
+      print(
+        'Phone permission permanently denied. Please enable it in settings.',
+      );
+      openAppSettings();
+    }
+  }
+
+  Future<void> makePhoneCall(String phoneNumber) async {
+    final launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    await launchUrl(launchUri);
+  }
 
   @override
   void didChangeDependencies() {
@@ -73,14 +110,17 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                         right: 0,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(dish.imageUrls.length, (index) {
+                          children:
+                              List.generate(dish.imageUrls.length, (index) {
                             return Container(
                               margin: EdgeInsets.symmetric(horizontal: 4),
                               width: _currentPage == index ? 12 : 8,
                               height: _currentPage == index ? 12 : 8,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: _currentPage == index ? Colors.white : Colors.grey,
+                                color: _currentPage == index
+                                    ? Colors.white
+                                    : Colors.grey,
                               ),
                             );
                           }),
@@ -97,7 +137,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                 SizedBox(height: 10),
                 Text(
                   'Category: ${dish.category.toUpperCase()}',
-                  style: TextStyle(fontSize: 16, color: const Color.fromARGB(255, 19, 19, 19)),
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: const Color.fromARGB(255, 19, 19, 19)),
                 ),
                 SizedBox(height: 20),
                 Text(
@@ -105,9 +147,17 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                   style: TextStyle(fontSize: 16),
                 ),
                 SizedBox(height: 20),
-                Text(
-                  'Contact: ${dish.contactNumber}',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                GestureDetector(
+                  onTap: () {
+                    requestPhonePermission();
+                    setState(() {
+                      launched = makePhoneCall('+917019356439');
+                    });
+                  },
+                  child: Text(
+                    'Contact: ${dish.contactNumber}',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
