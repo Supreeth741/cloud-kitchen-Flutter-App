@@ -1,0 +1,2 @@
+D:/Project/college-project/clokit/android/app/.cxx/Debug/g6z3p4n2/x86/CMakeFiles/edit_cache.dir
+D:/Project/college-project/clokit/android/app/.cxx/Debug/g6z3p4n2/x86/CMakeFiles/rebuild_cache.dir
